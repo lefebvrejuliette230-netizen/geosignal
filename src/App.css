@@ -1,0 +1,316 @@
+/* ------------------------------------------------------------------ */
+/* Layout                                                               */
+/* ------------------------------------------------------------------ */
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  background: var(--bg);
+}
+
+/* ------------------------------------------------------------------ */
+/* Header                                                               */
+/* ------------------------------------------------------------------ */
+
+.site-header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 40px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.header-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  font-size: 28px;
+  color: var(--accent);
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: -0.5px;
+}
+
+.brand-tagline {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Subscribe form                                                       */
+/* ------------------------------------------------------------------ */
+
+.subscribe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+}
+
+.subscribe-label {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.subscribe-row {
+  display: flex;
+  gap: 8px;
+}
+
+.subscribe-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.subscribe-input:focus {
+  border-color: var(--accent);
+}
+
+.subscribe-btn {
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+.subscribe-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.subscribe-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.subscribe-feedback {
+  font-size: 13px;
+  margin: 0;
+}
+
+.subscribe-feedback.success {
+  color: #16a34a;
+}
+
+.subscribe-feedback.error {
+  color: #dc2626;
+}
+
+/* ------------------------------------------------------------------ */
+/* Main content                                                         */
+/* ------------------------------------------------------------------ */
+
+.main {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.state-msg {
+  text-align: center;
+  color: var(--text);
+  padding: 48px 0;
+}
+
+.state-msg.error {
+  color: #dc2626;
+}
+
+/* ------------------------------------------------------------------ */
+/* Alert sections                                                       */
+/* ------------------------------------------------------------------ */
+
+.alert-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title.high {
+  color: #dc2626;
+}
+
+.alert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Alert cards                                                          */
+/* ------------------------------------------------------------------ */
+
+.alert-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: box-shadow 0.2s;
+}
+
+.alert-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.alert-card.flagged {
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.03);
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.alert-source {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.alert-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-h);
+}
+
+.alert-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.alert-title a:hover {
+  text-decoration: underline;
+}
+
+.alert-description {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.alert-time {
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------------ */
+/* Risk badges                                                          */
+/* ------------------------------------------------------------------ */
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.risk-high {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.risk-medium {
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+}
+
+.risk-low {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer                                                               */
+/* ------------------------------------------------------------------ */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 40px;
+  font-size: 13px;
+  color: var(--text);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                           */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 768px) {
+  .site-header {
+    padding: 24px 20px;
+    flex-direction: column;
+  }
+
+  .main {
+    padding: 24px 20px;
+  }
+
+  .alert-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .subscribe-form {
+    min-width: unset;
+    width: 100%;
+  }
+}

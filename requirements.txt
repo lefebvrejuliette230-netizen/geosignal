@@ -1,0 +1,8 @@
+flask
+flask-cors
+apscheduler
+requests
+groq
+sendgrid
+python-dotenv
+gunicorn

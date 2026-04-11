@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoSignal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080c14;--surface:#0e1420;--border:#1c2538;--border-hi:#2a3a55;
+      --text:#c8d6f0;--muted:#4a5d7a;--accent:#00e5ff;--green:#00ff88;
+      --amber:#ffb800;--red:#ff4060;--purple:#b06cff;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:0;min-height:100vh;}
+
+    /* Grid background */
+    .grid-bg {
+      position:fixed;inset:0;
+      background-image:linear-gradient(rgba(0,229,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.025) 1px,transparent 1px);
+      background-size:36px 36px;pointer-events:none;z-index:0;
+    }
+
+    .container {
+      position:relative;z-index:1;max-width:860px;margin:0 auto;padding:20px;
+    }
+
+    /* Header */
+    .header {
+      display:flex;align-items:center;justify-content:space-between;
+      padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:28px;
+    }
+    .logo {display:flex;align-items:center;gap:10px;}
+    .logo-text {font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;}
+    .logo-text span {color:var(--accent);}
+    .status {display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+    .status-dot {width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+    @keyframes pulse {0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+    /* Input panel */
+    .input-panel {
+      background:var(--surface);border:1px solid var(--border);border-radius:6px;
+      padding:22px;margin-bottom:20px;position:relative;overflow:hidden;
+    }
+    .input-glow {position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--purple),transparent);}
+    .input-label {font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+    .input-label span {color:var(--accent);opacity:.6;}
+    .input-row {display:flex;gap:10px;}
+    .input-field {
+      flex:1;background:var(--bg);border:1px solid var(--border-hi);border-radius:4px;
+      padding:12px 14px;color:var(--text);font-family:inherit;font-size:13px;outline:none;
+    }
+    .input-field:focus {border-color:var(--accent);}
+    .input-field::placeholder {color:var(--muted);}
+    .btn {
+      background:var(--accent);color:var(--bg);border:none;border-radius:4px;
+      padding:12px 20px;font-family:inherit;font-size:12px;font-weight:600;
+      letter-spacing:.05em;white-space:nowrap;cursor:pointer;transition:opacity .15s;
+    }
+    .btn:hover {opacity:0.85;}
+    .btn:disabled {opacity:0.4;cursor:not-allowed;}
+
+    /* History tabs */
+    .history-bar {
+      display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;
+    }
+    .history-tabs {display:flex;gap:6px;}
+    .tab-btn {
+      background:var(--surface);border:1px solid var(--border);border-radius:4px;
+      padding:8px 14px;font-family:inherit;font-size:11px;color:var(--muted);
+      cursor:pointer;transition:all .15s;
+    }
+    .tab-btn:hover,.tab-btn.active {border-color:var(--accent);color:var(--accent);}
+    .history-info {font-size:11px;color:var(--muted);}
+
+    /* Loading state */
+    .loading-panel {
+      background:var(--surface);border:1px solid var(--border);border-radius:6px;
+      padding:60px;text-align:center;margin-bottom:14px;
+    }
+    .spinner {
+      width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);
+      border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;
+    }
+    @keyframes spin {to{transform:rotate(360deg);}}
+
+    /* Empty state */
+    .empty-panel {
+      background:var(--surface);border:1px solid var(--border);border-radius:6px;
+      padding:60px;text-align:center;
+    }
+    .empty-icon {font-size:32px;margin-bottom:12px;opacity:0.5;}
+
+    /* Score card */
+    .score-card {
+      background:var(--surface);border:1px solid var(--border);border-radius:6px;
+      padding:24px;margin-bottom:14px;display:flex;align-items:center;gap:28px;
+    }
+    .ring-container {position:relative;width:100px;height:100px;flex-shrink:0;}
+    .ring-bg,.ring-fill {fill:none;stroke-width:6;}
+    .ring-bg {stroke:var(--border);}
+    .ring-fill {stroke-linecap:round;transition:stroke-dashoffset .5s ease;}
+    .ring-center {
+      position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+    }
+    .ring-score {font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:#fff;line-height:1;}
+    .ring-denom {font-size:9px;color:var(--muted);letter-spacing:.1em;margin-top:1px;}
+    .score-info {flex:1;}
+    .risk-badge {
+      display:inline-block;font-size:11px;font-weight:600;letter-spacing:.15em;
+      text-transform:uppercase;padding:3px 10px;border-radius:2px;margin-bottom:10px;
+    }
+    .risk-badge.low {color:var(--green);background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.2);}
+    .risk-badge.moderate {color:var(--amber);background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.2);}
+    .risk-badge.elevated {color:var(--amber);background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.2);}
+    .risk-badge.high {color:var(--red);background:rgba(255,64,96,.1);border:1px solid rgba(255,64,96,.2);}
+    .risk-badge.critical {color:var(--red);background:rgba(255,64,96,.15);border:1px solid rgba(255,64,96,.3);}
+    .score-headline {font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.35;}
+    .score-meta {display:flex;gap:16px;flex-wrap:wrap;}
+    .score-meta-item {font-size:11px;color:var(--muted);}
+    .score-meta-item b {color:var(--text);font-weight:500;}
+
+    /* Analysis grid */
+    .analysis-grid {display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    .analysis-card {background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px;}
+    .analysis-title {font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+    .analysis-text {font-size:12px;color:var(--text);line-height:1.7;}
+
+    /* Assets table */
+    .assets-card {background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px;margin-bottom:14px;}
+    .assets-title {font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+    .assets-table {width:100%;border-collapse:collapse;}
+    .assets-table th {
+      text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);
+      font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;
+    }
+    .assets-table td {padding:9px 10px;border-bottom:1px solid rgba(28,37,56,.5);}
+    .assets-table tr:last-child td {border-bottom:none;}
+    .ticker {
+      background:var(--bg);border:1px solid var(--border-hi);border-radius:3px;
+      padding:2px 7px;font-size:11px;font-weight:600;color:var(--accent);
+    }
+    .direction-up {color:var(--green);font-weight:600;}
+    .direction-down {color:var(--red);font-weight:600;}
+    .confidence {font-size:11px;padding:2px 8px;border-radius:2px;}
+    .confidence.high {color:var(--green);background:rgba(0,255,136,.08);}
+    .confidence.medium {color:var(--amber);background:rgba(255,184,0,.08);}
+    .confidence.low {color:var(--muted);background:rgba(74,93,122,.1);}
+
+    /* Regions */
+    .regions-card {
+      background:var(--surface);border:1px solid var(--border);border-radius:6px;
+      padding:14px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+    }
+    .regions-label {font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px;}
+    .region-tag {
+      font-size:12px;color:var(--text);background:var(--bg);
+      border:1px solid var(--border-hi);border-radius:2px;padding:3px 9px;
+    }
+
+    /* Toast */
+    .toast-container {position:fixed;top:20px;right:20px;z-index:1000;}
+    .toast {
+      background:var(--surface);border:1px solid var(--border);border-radius:4px;
+      padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:8px;
+      font-size:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);animation:slideIn .2s ease;
+    }
+    .toast.success {border-color:var(--green);}
+    .toast.error {border-color:var(--red);}
+    @keyframes slideIn {from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+    /* Responsive */
+    @media (max-width:700px) {
+      .score-card {flex-direction:column;text-align:center;}
+      .score-meta {justify-content:center;}
+      .analysis-grid {grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="17" stroke="#1c2538" stroke-width="1.5"/>
+        <circle cx="18" cy="18" r="11" stroke="#2a3a55" stroke-width="1"/>
+        <circle cx="18" cy="18" r="5" stroke="#00e5ff" stroke-width="1.5"/>
+        <line x1="18" y1="1" x2="18" y2="35" stroke="#1c2538" stroke-width="1"/>
+        <line x1="1" y1="18" x2="35" y2="18" stroke="#1c2538" stroke-width="1"/>
+        <circle cx="18" cy="18" r="2" fill="#00e5ff"/>
+      </svg>
+      <span class="logo-text">Geo<span>Signal</span></span>
+    </div>
+    <div class="status">
+      <div class="status-dot"></div>
+      <span id="statusText">System Online</span>
+    </div>
+  </header>
+
+  <!-- Input panel -->
+  <div class="input-panel">
+    <div class="input-glow"></div>
+    <div class="input-label"><span>//</span> Enter headline to analyze</div>
+    <div class="input-row">
+      <input type="text" class="input-field" id="headlineInput" placeholder="Paste a geopolitical headline...">
+      <button class="btn" id="analyzeBtn" onclick="analyzeHeadline()">Analyze →</button>
+    </div>
+  </div>
+
+  <!-- History bar -->
+  <div class="history-bar">
+    <div class="history-tabs">
+      <button class="tab-btn active" onclick="showEvent('current')">Current</button>
+      <button class="tab-btn" onclick="showEvent('prev')" id="prevBtn" style="display:none;">Previous</button>
+      <button class="tab-btn" onclick="cycleHistory(-1)" id="historyBackBtn" style="display:none;">←</button>
+      <button class="tab-btn" onclick="cycleHistory(1)" id="historyFwdBtn" style="display:none;">→</button>
+    </div>
+    <div class="history-info" id="historyInfo">No events analyzed yet</div>
+  </div>
+
+  <!-- Results container -->
+  <div id="resultsContainer">
+    <div class="empty-panel">
+      <div class="empty-icon">📡</div>
+      <div style="color:var(--muted);">Enter a headline above to analyze geopolitical risk</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  /* =============================================
+     CONFIGURATION
+     ============================================= */
+  const CONFIG = {
+    GROQ_API_KEY: '',
+    NEWSAPI_KEY: '',
+    REFRESH_INTERVAL: 30 * 60 * 1000,
+    MAX_EVENTS: 50
+  };
+
+  /* =============================================
+     STATE
+     ============================================= */
+  let events = JSON.parse(localStorage.getItem('geosignal_events') || '[]');
+  let currentIndex = 0;
+  let isLoading = false;
+
+  /* =============================================
+     INITIALIZATION
+     ============================================= */
+  document.addEventListener('DOMContentLoaded', () => {
+    if (events.length > 0) {
+      currentIndex = 0;
+      renderEvent(events[0]);
+      updateHistoryUI();
+      showToast(`Loaded ${events.length} events from history`, 'success');
+    }
+    startAutoRefresh();
+  });
+
+  // Enter key to analyze
+  document.getElementById('headlineInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') analyzeHeadline();
+  });
+
+  /* =============================================
+     AUTO-REFRESH
+     ============================================= */
+  function startAutoRefresh() {
+    setInterval(async () => {
+      console.log('Auto-refresh: fetching headlines...');
+      await fetchAndScoreHeadlines();
+    }, CONFIG.REFRESH_INTERVAL);
+  }
+
+  async function fetchAndScoreHeadlines() {
+    try {
+      const params = new URLSearchParams({
+        apiKey: CONFIG.NEWSAPI_KEY,
+        category: 'business',
+        language: 'en',
+        pageSize: '5'
+      });
+      const res = await fetch(`https://newsapi.org/v2/top-headlines?${params}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.status !== 'ok') return;
+
+      const headlines = data.articles
+        .filter(a => a.title && a.title.length > 20 && !a.title.includes('[Removed]'))
+        .map(a => a.title);
+
+      for (const headline of headlines) {
+        if (!events.some(e => e.headline === headline)) {
+          await scoreHeadline(headline, false);
+          await sleep(1000);
+        }
+      }
+      document.getElementById('statusText').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    } catch (err) {
+      console.log('Auto-fetch skipped (CORS or network issue)');
+    }
+  }
+
+  /* =============================================
+     ANALYZE HEADLINE
+     ============================================= */
+  async function analyzeHeadline() {
+    const input = document.getElementById('headlineInput');
+    const headline = input.value.trim();
+
+    if (!headline) {
+      showToast('Enter a headline first', 'error');
+      return;
+    }
+
+    if (events.some(e => e.headline === headline)) {
+      showToast('Already analyzed this headline', 'error');
+      return;
+    }
+
+    await scoreHeadline(headline, true);
+    input.value = '';
+  }
+
+  /* =============================================
+     AI SCORING
+     ============================================= */
+  async function scoreHeadline(headline, showUI = true) {
+    if (isLoading) return;
+    isLoading = true;
+
+    if (showUI) {
+      document.getElementById('resultsContainer').innerHTML = `
+        <div class="loading-panel">
+          <div class="spinner"></div>
+          <div style="color:var(--muted);">Analyzing geopolitical risk...</div>
+        </div>
+      `;
+    }
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+
+    const systemPrompt = `You are a senior geopolitical risk analyst at a tier-1 hedge fund.
+Analyze the headline and return ONLY valid JSON (no markdown):
+
+{
+  "riskScore": <number 1-100>,
+  "riskLabel": "<Low|Moderate|Elevated|High|Critical>",
+  "headline_summary": "<1 sentence restating the event clearly>",
+  "signal": "<primary sector: ENERGY|DEFENSE|TRADE|POLITICAL|FINANCIAL|TECH>",
+  "regions": ["<affected regions>"],
+  "geopolitical_analysis": "<3-4 sentences explaining the geopolitical context and implications>",
+  "market_impact": "<3-4 sentences on specific market movements expected>",
+  "assets": [
+    {"name": "<asset name>", "ticker": "<ticker>", "direction": "<UP|DOWN>", "confidence": "<HIGH|MEDIUM|LOW>"}
+  ],
+  "time_horizon": "<Immediate|Short-term|Medium-term|Long-term>"
+}
+
+Risk scoring: 1-25 Low, 26-45 Moderate, 46-65 Elevated, 66-85 High, 86-100 Critical`;
+
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Analyze: "${headline}"` }
+          ],
+          temperature: 0.3,
+          max_tokens: 800
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      let content = data.choices[0].message.content;
+      content = content.replace(/```json\n?|```\n?/g, '').trim();
+
+      const analysis = JSON.parse(content);
+
+      const event = {
+        id: Date.now().toString(),
+        headline,
+        riskScore: Math.min(100, Math.max(1, analysis.riskScore)),
+        riskLabel: analysis.riskLabel || 'Moderate',
+        headline_summary: analysis.headline_summary || headline,
+        signal: analysis.signal || 'POLITICAL',
+        regions: analysis.regions || ['Global'],
+        geopolitical_analysis: analysis.geopolitical_analysis || '',
+        market_impact: analysis.market_impact || '',
+        assets: analysis.assets || [],
+        time_horizon: analysis.time_horizon || 'Short-term',
+        timestamp: new Date().toISOString()
+      };
+
+      events.unshift(event);
+      if (events.length > CONFIG.MAX_EVENTS) {
+        events = events.slice(0, CONFIG.MAX_EVENTS);
+      }
+      saveEvents();
+
+      if (showUI) {
+        currentIndex = 0;
+        renderEvent(event);
+        updateHistoryUI();
+        showToast('Analysis complete', 'success');
+      }
+
+      return event;
+
+    } catch (err) {
+      console.error('Score error:', err);
+      if (showUI) {
+        showToast(`Analysis failed: ${err.message}`, 'error');
+        document.getElementById('resultsContainer').innerHTML = `
+          <div class="empty-panel">
+            <div class="empty-icon">⚠️</div>
+            <div style="color:var(--red);">Analysis failed. Please try again.</div>
+          </div>
+        `;
+      }
+    } finally {
+      isLoading = false;
+      btn.disabled = false;
+    }
+  }
+
+  /* =============================================
+     RENDER EVENT
+     ============================================= */
+  function renderEvent(event) {
+    const e = event;
+    const ringOffset = 264 - (264 * e.riskScore / 100);
+    const riskClass = e.riskLabel.toLowerCase();
+    const ringColor = getRingColor(e.riskScore);
+
+    const assetsHTML = e.assets.map(a => `
+      <tr>
+        <td>${esc(a.name)}</td>
+        <td><span class="ticker">${esc(a.ticker)}</span></td>
+        <td><span class="direction-${a.direction.toLowerCase()}">${a.direction === 'UP' ? '▲' : '▼'} ${a.direction}</span></td>
+        <td><span class="confidence ${a.confidence.toLowerCase()}">${a.confidence}</span></td>
+      </tr>
+    `).join('');
+
+    const regionsHTML = e.regions.map(r => `<span class="region-tag">${esc(r)}</span>`).join('');
+
+    document.getElementById('resultsContainer').innerHTML = `
+      <!-- Score card -->
+      <div class="score-card">
+        <div class="ring-container">
+          <svg width="100" height="100" viewBox="0 0 100 100" style="transform:rotate(-90deg);">
+            <circle class="ring-bg" cx="50" cy="50" r="42"/>
+            <circle class="ring-fill" cx="50" cy="50" r="42" stroke="${ringColor}"
+              stroke-dasharray="264" stroke-dashoffset="${ringOffset}"/>
+          </svg>
+          <div class="ring-center">
+            <span class="ring-score">${e.riskScore}</span>
+            <span class="ring-denom">/ 100</span>
+          </div>
+        </div>
+        <div class="score-info">
+          <div class="risk-badge ${riskClass}">${e.riskLabel.toUpperCase()} RISK</div>
+          <div class="score-headline">${esc(e.headline_summary)}</div>
+          <div class="score-meta">
+            <div class="score-meta-item">Signal: <b>${esc(e.signal)}</b></div>
+            <div class="score-meta-item">Horizon: <b>${esc(e.time_horizon)}</b></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis grid -->
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <div class="analysis-title">🌐 Geopolitical Analysis</div>
+          <div class="analysis-text">${esc(e.geopolitical_analysis)}</div>
+        </div>
+        <div class="analysis-card">
+          <div class="analysis-title">📈 Market Impact</div>
+          <div class="analysis-text">${esc(e.market_impact)}</div>
+        </div>
+      </div>
+
+      <!-- Assets table -->
+      <div class="assets-card">
+        <div class="assets-title">⚡ Affected Assets</div>
+        <table class="assets-table">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Ticker</th>
+              <th>Direction</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${assetsHTML || '<tr><td colspan="4" style="color:var(--muted);">No specific assets identified</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Regions -->
+      <div class="regions-card">
+        <span class="regions-label">Affected Regions</span>
+        ${regionsHTML}
+      </div>
+    `;
+  }
+
+  function getRingColor(score) {
+    if (score >= 66) return 'var(--red)';
+    if (score >= 46) return 'var(--amber)';
+    return 'var(--green)';
+  }
+
+  /* =============================================
+     HISTORY NAVIGATION
+     ============================================= */
+  function updateHistoryUI() {
+    const info = document.getElementById('historyInfo');
+    const prevBtn = document.getElementById('prevBtn');
+    const backBtn = document.getElementById('historyBackBtn');
+    const fwdBtn = document.getElementById('historyFwdBtn');
+
+    if (events.length === 0) {
+      info.textContent = 'No events analyzed yet';
+      prevBtn.style.display = 'none';
+      backBtn.style.display = 'none';
+      fwdBtn.style.display = 'none';
+    } else {
+      info.textContent = `Event ${currentIndex + 1} of ${events.length}`;
+      prevBtn.style.display = events.length > 1 ? 'inline-block' : 'none';
+      backBtn.style.display = events.length > 1 ? 'inline-block' : 'none';
+      fwdBtn.style.display = events.length > 1 ? 'inline-block' : 'none';
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.tab-btn').classList.add('active');
+  }
+
+  function showEvent(which) {
+    if (events.length === 0) return;
+    if (which === 'current') currentIndex = 0;
+    else if (which === 'prev') currentIndex = Math.min(currentIndex + 1, events.length - 1);
+    renderEvent(events[currentIndex]);
+    updateHistoryUI();
+  }
+
+  function cycleHistory(dir) {
+    if (events.length === 0) return;
+    currentIndex = (currentIndex + dir + events.length) % events.length;
+    renderEvent(events[currentIndex]);
+    updateHistoryUI();
+  }
+
+  /* =============================================
+     STORAGE
+     ============================================= */
+  function saveEvents() {
+    localStorage.setItem('geosignal_events', JSON.stringify(events));
+  }
+
+  /* =============================================
+     UTILITIES
+     ============================================= */
+  function esc(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${type === 'success' ? '✓' : '!'}</span> ${esc(message)}`;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 200);
+    }, 3000);
+  }
+
+  console.log('%c📡 GeoSignal Phase 2', 'font-size:16px;font-weight:bold;color:#00e5ff;');
+</script>
+
+</body>
+</html>
